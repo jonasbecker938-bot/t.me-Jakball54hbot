@@ -2,7 +2,7 @@ const TelegramBot = require('node-telegram-bot-api');
 
 const token = process.env.BOT_TOKEN;
 if (!token) {
-    console.error('❌ BOT_TOKEN is not set!');
+    console.error('❌ BOT_TOKEN environment variable is not set!');
     process.exit(1);
 }
 
@@ -11,7 +11,7 @@ console.log('🤖 Starting Poll & Quiz Bot...');
 const bot = new TelegramBot(token, { polling: true });
 const userSessions = {};
 
-// Error handlers
+// Error handling
 bot.on('error', (error) => console.error('Bot error:', error));
 bot.on('polling_error', (error) => console.error('Polling error:', error));
 
@@ -67,7 +67,7 @@ bot.onText(/\/quiz/, (msg) => {
     });
 });
 
-// Handle messages
+// Handle text messages
 bot.on('message', (msg) => {
     const chatId = msg.chat.id;
     const userId = msg.from.id;
@@ -111,7 +111,7 @@ bot.on('message', (msg) => {
     }
 });
 
-// Handle callbacks
+// Handle callback queries
 bot.on('callback_query', (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
     const userId = callbackQuery.from.id;
@@ -206,3 +206,4 @@ function createQuizFromCallback(chatId, messageId, session) {
 }
 
 console.log('✅ Bot is running successfully!');
+console.log('Waiting for messages...');
