@@ -4,6 +4,7 @@ from telegram import Update, Poll, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Application, CommandHandler, CallbackQueryHandler, ContextTypes, MessageHandler, filters
 import json
 import random
+import asyncio
 
 # Enable logging
 logging.basicConfig(
@@ -281,6 +282,14 @@ async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
         "❌ Unknown command. Use /start to see available commands."
     )
 
+async def error_handler(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
+    """Log errors and notify user."""
+    logger.error(f"Update {update} caused error {context.error}")
+    if update and update.effective_message:
+        await update.effective_message.reply_text(
+            "⚠️ An error occurred. Please try again or use /start"
+        )
+
 # --- Main Function ---
 
 def main() -> None:
@@ -307,6 +316,9 @@ def main() -> None:
     
     # Add unknown command handler
     application.add_handler(MessageHandler(filters.COMMAND, unknown))
+    
+    # Add error handler
+    application.add_error_handler(error_handler)
     
     # Start the bot
     logger.info("Bot is starting...")
