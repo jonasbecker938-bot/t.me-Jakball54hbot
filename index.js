@@ -2,14 +2,18 @@ const TelegramBot = require('node-telegram-bot-api');
 
 const token = process.env.BOT_TOKEN;
 if (!token) {
-    console.error('BOT_TOKEN is not set!');
+    console.error('❌ BOT_TOKEN is not set!');
     process.exit(1);
 }
+
+console.log('🤖 Starting Poll & Quiz Bot...');
 
 const bot = new TelegramBot(token, { polling: true });
 const userSessions = {};
 
-console.log('🤖 Poll & Quiz Bot is starting...');
+// Error handlers
+bot.on('error', (error) => console.error('Bot error:', error));
+bot.on('polling_error', (error) => console.error('Polling error:', error));
 
 // Commands
 bot.onText(/\/start/, (msg) => {
