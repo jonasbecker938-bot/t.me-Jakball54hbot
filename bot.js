@@ -13,31 +13,31 @@ const bot = new TelegramBot(token, { polling: true });
 // Store user sessions
 const userSessions = {};
 
+console.log('Bot is starting...');
+
 // --- Command Handlers ---
 
 bot.onText(/\/start/, (msg) => {
     const chatId = msg.chat.id;
-    const welcomeText = `
-🌟 Welcome to Poll & Quiz Creator Bot! 🌟
+    bot.sendMessage(chatId, 
+        `🌟 Welcome to Poll & Quiz Creator Bot! 🌟
 
 Commands:
 /poll - Create a new poll
 /quiz - Create a new quiz
 /help - Show help
-/cancel - Cancel operation
-    `;
-    bot.sendMessage(chatId, welcomeText, { parse_mode: 'Markdown' });
+/cancel - Cancel operation`
+    );
 });
 
 bot.onText(/\/help/, (msg) => {
     const chatId = msg.chat.id;
-    const helpText = `
-📖 Commands
+    bot.sendMessage(chatId,
+        `📖 Commands
 /poll - Create a poll
 /quiz - Create a quiz
-/cancel - Cancel current operation
-    `;
-    bot.sendMessage(chatId, helpText, { parse_mode: 'Markdown' });
+/cancel - Cancel current operation`
+    );
 });
 
 bot.onText(/\/cancel/, (msg) => {
@@ -58,15 +58,13 @@ bot.onText(/\/poll/, (msg) => {
     
     userSessions[userId] = { type: 'poll', step: 'question' };
     
-    const options = {
+    bot.sendMessage(chatId, '📝 Send me the poll question:', {
         reply_markup: {
             inline_keyboard: [
                 [{ text: '❌ Cancel', callback_data: 'cancel' }]
             ]
         }
-    };
-    
-    bot.sendMessage(chatId, '📝 Send me the poll question:', options);
+    });
 });
 
 bot.onText(/\/quiz/, (msg) => {
@@ -75,15 +73,13 @@ bot.onText(/\/quiz/, (msg) => {
     
     userSessions[userId] = { type: 'quiz', step: 'question' };
     
-    const options = {
+    bot.sendMessage(chatId, '📝 Send me the quiz question:', {
         reply_markup: {
             inline_keyboard: [
                 [{ text: '❌ Cancel', callback_data: 'cancel' }]
             ]
         }
-    };
-    
-    bot.sendMessage(chatId, '📝 Send me the quiz question:', options);
+    });
 });
 
 // Handle text messages
@@ -107,20 +103,14 @@ bot.on('message', (msg) => {
         session.step = 'options';
         session.options = [];
         
-        const options = {
+        bot.sendMessage(chatId, '📝 Send me options (one per message).\nType /done when finished.', {
             reply_markup: {
                 inline_keyboard: [
                     [{ text: '✅ Done', callback_data: 'done_options' }],
                     [{ text: '❌ Cancel', callback_data: 'cancel' }]
                 ]
             }
-        };
-        
-        bot.sendMessage(
-            chatId, 
-            '📝 Send me options (one per message).\nType /done when finished.',
-            options
-        );
+        });
     } 
     else if (session.step === 'options') {
         if (text === '/done') {
@@ -147,6 +137,7 @@ bot.on('callback_query', (callbackQuery) => {
     const chatId = callbackQuery.message.chat.id;
     const userId = callbackQuery.from.id;
     const data = callbackQuery.data;
+    const messageId = callbackQuery.message.message_id;
     
     // Answer the callback
     bot.answerCallbackQuery(callbackQuery.id);
@@ -157,7 +148,7 @@ bot.on('callback_query', (callbackQuery) => {
         }
         bot.editMessageText('✅ Cancelled!', {
             chat_id: chatId,
-            message_id: callbackQuery.message.message_id
+            message_id: messageId
         });
         return;
     }
@@ -166,7 +157,7 @@ bot.on('callback_query', (callbackQuery) => {
         if (!userSessions[userId]) {
             bot.editMessageText('Start with /poll or /quiz', {
                 chat_id: chatId,
-                message_id: callbackQuery.message.message_id
+                message_id: messageId
             });
             return;
         }
@@ -175,15 +166,15 @@ bot.on('callback_query', (callbackQuery) => {
         if (session.options.length < 2) {
             bot.editMessageText('⚠️ Need at least 2 options!', {
                 chat_id: chatId,
-                message_id: callbackQuery.message.message_id
+                message_id: messageId
             });
             return;
         }
         
         if (session.type === 'poll') {
-            createPollFromCallback(chatId, callbackQuery.message.message_id, session);
+            createPollFromCallback(chatId, messageId, session);
         } else {
-            createQuizFromCallback(chatId, callbackQuery.message.message_id, session);
+            createQuizFromCallback(chatId, messageId, session);
         }
         return;
     }
@@ -192,7 +183,7 @@ bot.on('callback_query', (callbackQuery) => {
         if (!userSessions[userId]) {
             bot.editMessageText('Session expired. Use /quiz', {
                 chat_id: chatId,
-                message_id: callbackQuery.message.message_id
+                message_id: messageId
             });
             return;
         }
@@ -213,7 +204,7 @@ bot.on('callback_query', (callbackQuery) => {
         
         bot.editMessageText('✅ Quiz created!', {
             chat_id: chatId,
-            message_id: callbackQuery.message.message_id
+            message_id: messageId
         });
         
         delete userSessions[userId];
@@ -243,13 +234,11 @@ function createQuizQuestion(chatId, session) {
     });
     inlineKeyboard.push([{ text: '❌ Cancel', callback_data: 'cancel' }]);
     
-    const replyMarkup = {
+    bot.sendMessage(chatId, '🧠 Select the correct answer:', {
         reply_markup: {
             inline_keyboard: inlineKeyboard
         }
-    };
-    
-    bot.sendMessage(chatId, '🧠 Select the correct answer:', replyMarkup);
+    });
     session.step = 'correct_answer';
 }
 
@@ -279,19 +268,15 @@ function createQuizFromCallback(chatId, messageId, session) {
     });
     inlineKeyboard.push([{ text: '❌ Cancel', callback_data: 'cancel' }]);
     
-    const replyMarkup = {
-        reply_markup: {
-            inline_keyboard: inlineKeyboard
-        }
-    };
-    
     bot.editMessageText('🧠 Select the correct answer:', {
         chat_id: chatId,
         message_id: messageId,
-        ...replyMarkup
+        reply_markup: {
+            inline_keyboard: inlineKeyboard
+        }
     });
     
     session.step = 'correct_answer';
 }
 
-console.log('Bot is running...');
+console.log('Bot is running and ready!');
