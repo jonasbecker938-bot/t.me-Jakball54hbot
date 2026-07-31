@@ -13,8 +13,6 @@ logger = logging.getLogger(__name__)
 # Store user sessions
 user_sessions = {}
 
-# --- Command Handlers ---
-
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     welcome_text = """
 🌟 **Welcome to Poll & Quiz Creator Bot!** 🌟
@@ -53,7 +51,6 @@ async def poll(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     
     await update.message.reply_text(
         "📝 Send me the poll question:",
-        parse_mode='Markdown',
         reply_markup=reply_markup
     )
 
@@ -66,7 +63,6 @@ async def quiz(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     
     await update.message.reply_text(
         "📝 Send me the quiz question:",
-        parse_mode='Markdown',
         reply_markup=reply_markup
     )
 
@@ -209,8 +205,6 @@ async def create_quiz_from_callback(update: Update, context: ContextTypes.DEFAUL
 
 async def unknown(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
     await update.message.reply_text("❌ Unknown command. Use /start")
-
-# --- Main ---
 
 def main() -> None:
     token = os.environ.get('BOT_TOKEN')
